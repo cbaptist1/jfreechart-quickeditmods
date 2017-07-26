@@ -259,13 +259,11 @@ public class WaferMapRenderer extends AbstractRenderer {
             return;
         }
         WaferMapDataset data = this.plot.getDataset();
-        Number dataMin = data.getMinValue();
-        Number dataMax = data.getMaxValue();
         Set uniqueValues = data.getUniqueValues();
         if (this.paintIndexMethod == CONSISTENT_INDEX)
         	makeConsistentIndex(uniqueValues);
         else if (this.paintIndexMethod == BLUE_ORANGE_INDEX){
-        	makeBlueOrangeIndex(uniqueValues, dataMin, dataMax);
+        	makeBlueOrangeIndex(uniqueValues, data);
         }
         else if (uniqueValues.size() <= this.paintLimit) {
             int count = 0; // assign a color for each unique value
@@ -274,6 +272,8 @@ public class WaferMapRenderer extends AbstractRenderer {
             }
         }
         else {
+        	Number dataMin = data.getMinValue();
+            Number dataMax = data.getMaxValue();
             // more values than paints so map
             // multiple values to the same color
             switch (this.paintIndexMethod) {
@@ -290,7 +290,9 @@ public class WaferMapRenderer extends AbstractRenderer {
     }
 
     private LookupPaintScale paintScale = null;
-    private void makeBlueOrangeIndex(Set uniqueValues, Number min, Number max){
+    private void makeBlueOrangeIndex(Set uniqueValues, WaferMapDataset data){
+    	Number min = data.getAllGroupsMinValue();
+    	Number max = data.getAllGroupsMaxValue();
     	int size = uniqueValues.size();
     	int i = 0;
     	Set<Number> uniqueNumbers = (Set<Number>)uniqueValues;
@@ -298,18 +300,27 @@ public class WaferMapRenderer extends AbstractRenderer {
     	Color.RGBtoHSB(Color.BLUE.getRed(), Color.BLUE.getGreen(), Color.BLUE.getBlue(), blueVals);
     	float[] c2Vals = new float[3];
     	Color c2 = Color.RED;
-    	if (min == null)
+    	double doubleMin = min.doubleValue();
+    	double doubleMax = max.doubleValue();
+    	//if (doubleMin >= doubleMax)
+        	//doubleMin = doubleMin - 1.0; //kluge
+        
+    	if (min == null || Double.isInfinite(doubleMin)||Double.isNaN(doubleMin)){
     		min = 0.0;
-    	if (max == null)
+    		doubleMin = min.doubleValue();
+    	}
+    	if (max == null || Double.isInfinite(doubleMax) || Double.isNaN(doubleMax)){
     		max = 1.0;
-    	if (max == min){
-    		double doubleMax = max.doubleValue();
+    		doubleMax = max.doubleValue();
+    	}
+    	if (max.equals(min)){
     		if (doubleMax > 0.0)
     			min = doubleMax / 2.0;
     		else if (doubleMax == 0.0)
     			min = -1.0;
     		else
     			min = doubleMax * 2;
+    		doubleMin = min.doubleValue();
     	}
     	double interval = (max.doubleValue() - min.doubleValue())/1000;
     	System.out.format("Min %f max %f interval %f\n", min, max, interval);
@@ -416,8 +427,8 @@ public class WaferMapRenderer extends AbstractRenderer {
     	if (paintScale == null)
     		return result;
     	 WaferMapDataset data = this.plot.getDataset();
-         double dataMin = data.getMinValue().doubleValue();
-         double dataMax = data.getMaxValue().doubleValue();
+         double dataMin = data.getAllGroupsMinValue().doubleValue();
+         double dataMax = data.getAllGroupsMaxValue().doubleValue();
          Set uniqueValues = data.getUniqueValues();
          List<Double> uniqueValueList = Lists.newArrayList();
          uniqueValueList.addAll(uniqueValues);
@@ -432,9 +443,9 @@ public class WaferMapRenderer extends AbstractRenderer {
          while (value <= paintScale.getUpperBound()){
         	 String label = "";
         	// if (index == 0 || index ==uniqueValueList.size() - 1)
-        	 if (value == dataMin || value == dataMax){
-        		 label = df.format(value);
-        	 }
+        	// if (value == dataMin || value == dataMax){
+        	 label = df.format(value);
+        	// }
         	 Shape shape =  new Rectangle2D.Double(-3.0, -5.0, 6.0, 10.0);
              //Shape shape = new Rectangle2D.Double(1d, 1d, 1d, 1d);
         	 Paint paint = paintScale.getPaint(value);

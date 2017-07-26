@@ -76,6 +76,9 @@ public class WaferMapDataset extends AbstractDataset {
 
     /** minimum value in this dataset */
     private Double minValue;
+    
+    private Double allGroupsMinValue;
+    private Double allGroupsMaxValue;
 
     /** default chip spacing */
     private static final double DEFAULT_CHIP_SPACE = 1d;
@@ -323,4 +326,26 @@ public class WaferMapDataset extends AbstractDataset {
     public int getYOffset(){
     	return this.yOffset;
     }
+
+	public Double getAllGroupsMinValue() {
+		if (allGroupsMinValue == null)
+			return this.minValue;
+		return allGroupsMinValue;
+	}
+
+	public void setAllGroupsMinValue(Double allGroupsMinValue) {
+		this.allGroupsMinValue = allGroupsMinValue;
+	}
+
+	public Double getAllGroupsMaxValue() {
+		if (allGroupsMaxValue == null)
+			return this.maxValue;
+		return allGroupsMaxValue;
+	}
+
+	public void setAllGroupsMaxValue(Double allGroupsMaxValue) {
+		this.allGroupsMaxValue = allGroupsMaxValue;
+	}
+    
+    
 }
