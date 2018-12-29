@@ -159,6 +159,53 @@ public class HistogramDataset extends AbstractIntervalXYDataset
     
     public void addSeries(Comparable key, java.lang.Iterable<Double> values, int bins,
             double minimum, double maximum) {
+    	if (values != null)
+    		addSeries(key, values.iterator(), bins, minimum, maximum);
+    }
+    
+    public static List<HistogramBin>  makeBins(double minimum, double maximum, int bins) {
+    	 List<HistogramBin> binList = new ArrayList<HistogramBin>(bins);
+    	 double lower = minimum;
+         double upper;
+         double binWidth = (maximum - minimum) / bins;
+
+         for (int i = 0; i < bins; i++) {
+             HistogramBin bin;
+             // make sure bins[bins.length]'s upper boundary ends at maximum
+             // to avoid the rounding issue. the bins[0] lower boundary is
+             // guaranteed start from min
+             if (i == bins - 1) {
+                 bin = new HistogramBin(lower, maximum);
+             }
+             else {
+                 upper = minimum + (i + 1) * binWidth;
+                 bin = new HistogramBin(lower, upper);
+                 lower = upper;
+             }
+             binList.add(bin);
+         }
+         return binList;
+    }
+    public static int getBinIndex(Double value, double minimum, double maximum, int bins) {
+    	int binIndex = bins - 1;
+        if (value < maximum) {
+            double fraction = (value.doubleValue() - minimum) / (maximum - minimum);
+            if (fraction < 0.0) {
+                fraction = 0.0;
+            }
+            binIndex = (int) (fraction * bins);
+            // rounding could result in binIndex being equal to bins
+            // which will cause an IndexOutOfBoundsException - see bug
+            // report 1553088
+            if (binIndex >= bins) {
+                binIndex = bins - 1;
+            }
+        }
+        return binIndex;
+    }
+    
+    public void addSeries(Comparable key, java.util.Iterator<Double> values, int bins,
+    		double minimum, double maximum) {
         ParamChecks.nullNotPermitted(key, "key");
         ParamChecks.nullNotPermitted(values, "values");
         if (bins < 1) {
@@ -167,44 +214,17 @@ public class HistogramDataset extends AbstractIntervalXYDataset
         }
         double binWidth = (maximum - minimum) / bins;
 
-        double lower = minimum;
-        double upper;
-        List<HistogramBin> binList = new ArrayList<HistogramBin>(bins);
-        for (int i = 0; i < bins; i++) {
-            HistogramBin bin;
-            // make sure bins[bins.length]'s upper boundary ends at maximum
-            // to avoid the rounding issue. the bins[0] lower boundary is
-            // guaranteed start from min
-            if (i == bins - 1) {
-                bin = new HistogramBin(lower, maximum);
-            }
-            else {
-                upper = minimum + (i + 1) * binWidth;
-                bin = new HistogramBin(lower, upper);
-                lower = upper;
-            }
-            binList.add(bin);
-        }
+       // double lower = minimum;
+       // double upper;
+        List<HistogramBin> binList = makeBins(minimum, maximum, bins); //new ArrayList<HistogramBin>(bins);
         int valuesUsed = 0;
         // fill the bins
         //for (int i = 0; i < values.length; i++) {
-        for (Double value : values){
+        while (values.hasNext()) {
+        	Double value = values.next();
         	if (value == null)
         		continue;
-            int binIndex = bins - 1;
-            if (value < maximum) {
-                double fraction = (value.doubleValue() - minimum) / (maximum - minimum);
-                if (fraction < 0.0) {
-                    fraction = 0.0;
-                }
-                binIndex = (int) (fraction * bins);
-                // rounding could result in binIndex being equal to bins
-                // which will cause an IndexOutOfBoundsException - see bug
-                // report 1553088
-                if (binIndex >= bins) {
-                    binIndex = bins - 1;
-                }
-            }
+        	int binIndex = getBinIndex(value, minimum, maximum, bins);
             HistogramBin bin = (HistogramBin) binList.get(binIndex);
             bin.incrementCount();
             valuesUsed++;
@@ -217,6 +237,15 @@ public class HistogramDataset extends AbstractIntervalXYDataset
         map.put("bin width", new Double(binWidth));
         this.list.add(map);
         fireDatasetChanged();
+    }
+    public void addSeries(Comparable key, List<HistogramBin> binList, int valuesUsed, double binWidth) {
+    	 Map<String,Object> map = new HashMap<String,Object>();
+         map.put("key", key);
+         map.put("bins", binList);
+         map.put("values.length", valuesUsed);
+         map.put("bin width", new Double(binWidth));
+         this.list.add(map);
+         fireDatasetChanged();
     }
 
     /**
