@@ -53,7 +53,8 @@ import org.jfree.data.DefaultKeyedValues2D;
  * class.
  */
 public class WaferMapDataset extends AbstractDataset {
-
+	
+	private double rotation = 0.0;
     /**
      * Storage structure for the data values (row key is chipx, column is
      * chipy)
@@ -346,6 +347,15 @@ public class WaferMapDataset extends AbstractDataset {
 	public void setAllGroupsMaxValue(Double allGroupsMaxValue) {
 		this.allGroupsMaxValue = allGroupsMaxValue;
 	}
+
+	public double getRotation() {
+		return rotation;
+	}
+
+	public void setRotation(double rotation) {
+		this.rotation = rotation;
+	}
     
-    
+
+	
 }

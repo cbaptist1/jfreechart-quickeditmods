@@ -55,6 +55,7 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
@@ -258,10 +259,10 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
         // adjust the drawing area for the plot insets (if any)...
         RectangleInsets insets = getInsets();
         insets.trim(area);
-
+        g2.rotate(this.dataset.getRotation(), area.getCenterX(), area.getCenterY());
         drawChipGrid(g2, area, 100.0);
         drawWaferEdge(g2, area, 100.0);
-
+        
     }
 
       /**
@@ -272,8 +273,9 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
      */
     protected void drawChipGrid(Graphics2D g2, Rectangle2D plotArea, double scalePct) {
 
-        Shape savedClip = g2.getClip();
+        Shape savedClip = g2.getClip();        
         g2.setClip(getWaferEdge(plotArea));
+        
         Rectangle2D chip = new Rectangle2D.Double();
         int xchips = 35;
         int ychips = 20;
