@@ -323,7 +323,7 @@ public class WaferMapRenderer extends AbstractRenderer {
     		doubleMin = min.doubleValue();
     	}
     	double interval = (max.doubleValue() - min.doubleValue())/1000;
-    	System.out.format("Min %f max %f interval %f\n", min, max, interval);
+    	//System.out.format("Min %f max %f interval %f\n", min, max, interval);
     	Color.RGBtoHSB(c2.getRed(), c2.getGreen(), c2.getBlue(), c2Vals);
     	paintScale = new LookupPaintScale(min.doubleValue(), max.doubleValue(), Color.RED);
     	//for (Number n : uniqueNumbers){

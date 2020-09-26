@@ -259,12 +259,70 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
         // adjust the drawing area for the plot insets (if any)...
         RectangleInsets insets = getInsets();
         insets.trim(area);
-        g2.rotate(this.dataset.getRotation(), area.getCenterX(), area.getCenterY());
+        //todo restore rotate if necessary
+       // g2.rotate(this.dataset.getRotation(), area.getCenterX(), area.getCenterY());
         drawChipGrid(g2, area, 100.0);
         drawWaferEdge(g2, area, 100.0);
-        
+        //g2.rotate(this.dataset.getRotation(), area.getCenterX(), area.getCenterY());
     }
 
+    protected int getXChips() {
+    	 return this.dataset.getMaxChipX() + 2;
+    }
+    
+    protected int getYChips() {
+    	return this.dataset.getMaxChipY()+ 2;
+    }
+    static private DecimalFormat df = new DecimalFormat("0.#####E0");
+    public String findChipAtPoint(double x, double y, Rectangle2D plotArea){
+    	double[] xValues = this.getChipXValues(plotArea, this.getXChips(), dataset.getChipSpace());
+    	double startX = xValues[1];
+    	double chipWidth = xValues[0];
+    	int ychips = this.getYChips();
+        double[] yValues = this.getChipYValues(plotArea, ychips, dataset.getChipSpace());
+        double startY = yValues[1];
+       // System.out.format("x %f y %f chip x %s startX %f chip y %s startY %f\n",x,y,  xValues, startX, yValues, startY);
+        double chipHeight = yValues[0];
+    	double chipSpace = dataset.getChipSpace();
+    	int chipX = (int)Math.floor((x - startX + chipWidth + chipSpace) / (chipWidth + chipSpace));
+    	int chipY = (int)Math.floor((y - startY + chipHeight + chipSpace) / (chipHeight + chipSpace));
+    	chipX = chipX - getXOffset() - 1;
+    	chipY = ychips - chipY - getYOffset() - 1;
+    	return makeValueString(chipX, chipY);
+    }
+    
+    private String makeValueString(int x, int y) {
+    	int logicalX = this.getLogicalX(x, y);
+    	int logicalY = this.getLogicalY(x, y);
+    	Number value = dataset.getChipValue(logicalX, logicalY);
+    	StringBuilder sb = new StringBuilder("(");
+    	String valueStr = "";
+    	if (value instanceof Double){ 
+    		if (this.renderer.getPaintScale() == null)
+    			valueStr = Integer.toString(value.intValue());
+    		else
+    			valueStr = df.format(value.doubleValue());
+    	}
+    	sb.append(logicalX).append(",").append(logicalY).append(") ").append(valueStr);
+    	//System.out.println(sb.toString());
+    	return sb.toString();
+    }
+    
+    protected int getDisplayX(int logicalX, int logicalY) {
+    	return logicalX;
+    }
+    
+    protected int getDisplayY(int logicalX, int logicalY) {
+    	return logicalY;
+    }
+    
+    protected int getLogicalX(int x, int y){
+    	return x;
+    }
+    
+    protected int getLogicalY(int x, int y) {
+    	return y;
+    }
       /**
      * Calculates and draws the chip locations on the wafer.
      *
@@ -272,17 +330,17 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
      * @param plotArea  the plot area.
      */
     protected void drawChipGrid(Graphics2D g2, Rectangle2D plotArea, double scalePct) {
-
         Shape savedClip = g2.getClip();        
         g2.setClip(getWaferEdge(plotArea));
         
         Rectangle2D chip = new Rectangle2D.Double();
+        //these are display counts, not logical model
         int xchips = 35;
         int ychips = 20;
         double space = 1d;
         if (this.dataset != null) {
-            xchips = this.dataset.getMaxChipX() + 2;
-            ychips = this.dataset.getMaxChipY()+ 2;
+            xchips = getXChips();
+            ychips = getYChips();
             space = this.dataset.getChipSpace();
         }
         double[] xValues = getChipXValues(plotArea, xchips, space);
@@ -291,8 +349,8 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
         double chipWidth = xValues[0];
         double startY = yValues[1];
         double chipHeight = yValues[0];
-        int xOffset = dataset.getXOffset();
-        int yOffset = dataset.getYOffset();
+        int xOffset = getXOffset();
+        int yOffset = getYOffset();
         //System.out.format("Plot area is %s, startx,y are %f,%f, chip dimensions are %f %f\n", plotArea, startX,startY,
         	//	chipWidth, chipHeight);
         for (int x = 1; x <= xchips; x++) {
@@ -301,9 +359,11 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
             for (int y = 1; y <= ychips; y++) {
                 double upperLeftY = (startY - chipHeight) + (chipHeight * y)
                     + (space * (y - 1));
+              //  System.out.format("upper left x %f chip x %d upper left y %f chip y %d\n", upperLeftX, x, upperLeftY, y);
                 chip.setFrame(upperLeftX, upperLeftY, chipWidth, chipHeight);
                 g2.setColor(Color.white);
-                Number value = this.dataset.getChipValue(x - 1 - xOffset, ychips - y - 1 - yOffset);
+                //System.out.format("x %d xOffset %d, ychips %d y %d yoffset %d\n", x, xOffset, ychips, y, yOffset);
+                Number value = getChipValueFromDisplay(x - 1 - xOffset, ychips - y - 1 - yOffset);
                 if (value != null) {
                     g2.setPaint(
                         this.renderer.getChipColor(value)
@@ -318,10 +378,22 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
         g2.setClip(savedClip);
     }
     
-    private double[] getChipXValues(Rectangle2D plotArea, int xchips, double space){
+    protected int getXOffset() {
+    	return dataset.getXOffset();
+    }
+    
+    protected int getYOffset() {
+    	return dataset.getYOffset();
+    }
+    
+    protected Number getChipValueFromDisplay(int displayX, int displayY) {
+    	return this.dataset.getChipValue(displayX, displayY);
+    }
+    
+    
+    protected double[] getChipXValues(Rectangle2D plotArea, int xchips, double space){
     	double startX = plotArea.getX();
-        //double startY = plotArea.getY();
-        
+        //double startY = plotArea.getY();        
     	double chipWidth = 1d;
         if (plotArea.getWidth() != plotArea.getHeight()) {
             double major, minor;
@@ -351,7 +423,7 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
         return xValues;
     }
     
-    private double[] getChipYValues(Rectangle2D plotArea, int ychips, double space){
+    protected double[] getChipYValues(Rectangle2D plotArea, int ychips, double space){
     	double chipHeight = 1d;
     	double startY = plotArea.getY();
         if (plotArea.getWidth() != plotArea.getHeight()) {
@@ -382,32 +454,7 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
         return yValues;
     }
     
-    public String findChipAtPoint(double x, double y, Rectangle2D plotArea, 
-    		DecimalFormat df){
-    	double[] xValues = this.getChipXValues(plotArea, dataset.getMaxChipX() + 2, dataset.getChipSpace());
-    	double startX = xValues[1];
-    	double chipWidth = xValues[0];
-    	int ychips = this.dataset.getMaxChipY()+ 2;
-        double[] yValues = this.getChipYValues(plotArea, ychips, dataset.getChipSpace());
-        double startY = yValues[1];
-        double chipHeight = yValues[0];
-    	double chipSpace = dataset.getChipSpace();
-    	int chipX = (int)Math.floor((x - startX + chipWidth + chipSpace) / (chipWidth + chipSpace));
-    	int chipY = (int)Math.floor((y - startY + chipHeight + chipSpace) / (chipHeight + chipSpace));
-    	chipX = chipX - dataset.getXOffset() - 1;
-    	chipY = ychips - chipY - dataset.getYOffset() - 1;
-    	StringBuilder sb = new StringBuilder("(");
-    	String valueStr = "";
-    	Number value = dataset.getChipValue(chipX, chipY);
-    	if (value instanceof Double){ 
-    		if (this.renderer.getPaintScale() == null)
-    			valueStr = Integer.toString(value.intValue());
-    		else
-    			valueStr = df.format(value.doubleValue());
-    	}
-    	sb.append(chipX).append(",").append(chipY).append(") ").append(valueStr);
-    	return sb.toString();
-    }
+    
 
     /**
      * Calculates the location of the waferedge.
