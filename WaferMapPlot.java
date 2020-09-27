@@ -287,14 +287,16 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
     	int chipX = (int)Math.floor((x - startX + chipWidth + chipSpace) / (chipWidth + chipSpace));
     	int chipY = (int)Math.floor((y - startY + chipHeight + chipSpace) / (chipHeight + chipSpace));
     	chipX = chipX - getXOffset() - 1;
-    	chipY = ychips - chipY - getYOffset() - 1;
+    	chipY = ychips - chipY - getYOffset() - 0;
     	return makeValueString(chipX, chipY);
     }
-    
+    // getChipValueFromDisplay(x - 1 - xOffset, ychips - y - 1 - yOffset);
     private String makeValueString(int x, int y) {
     	int logicalX = this.getLogicalX(x, y);
     	int logicalY = this.getLogicalY(x, y);
     	Number value = dataset.getChipValue(logicalX, logicalY);
+    	if (value == null)
+    		return null;
     	StringBuilder sb = new StringBuilder("(");
     	String valueStr = "";
     	if (value instanceof Double){ 
@@ -363,7 +365,7 @@ public class WaferMapPlot extends Plot implements RendererChangeListener,
                 chip.setFrame(upperLeftX, upperLeftY, chipWidth, chipHeight);
                 g2.setColor(Color.white);
                 //System.out.format("x %d xOffset %d, ychips %d y %d yoffset %d\n", x, xOffset, ychips, y, yOffset);
-                Number value = getChipValueFromDisplay(x - 1 - xOffset, ychips - y - 1 - yOffset);
+                Number value = getChipValueFromDisplay(x - 1 - xOffset, ychips - y - 0 - yOffset);
                 if (value != null) {
                     g2.setPaint(
                         this.renderer.getChipColor(value)
