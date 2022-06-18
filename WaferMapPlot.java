@@ -180,7 +180,7 @@ public class WaferMapPlot extends Plot implements RendererChangeListener, Clonea
         final int xOffset = this.getXOffset();
         final int yOffset = this.getYOffset();
         final boolean printChipValue = this.renderer.isPrintChipValue();
-        final Font[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
+        //final Font[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
         g2.setFont(g2.getFont().deriveFont(0, 8.0f));
         final float printXOffset = (float)Math.max(1.0, chipWidth * 0.35);
         final float printYOffset = (float)Math.max(1.0, chipHeight * 0.3);
@@ -299,6 +299,9 @@ public class WaferMapPlot extends Plot implements RendererChangeListener, Clonea
     }
     
     protected void drawWaferEdge(final Graphics2D g2, final Rectangle2D plotArea, final double includePct) {
+    	System.out.println("check wafer circle");
+    	if (!this.renderer.isShowWaferCircle())
+    		return;
         final Ellipse2D waferEdge = this.getWaferEdge(plotArea);
         g2.setColor(Color.black);
         g2.draw(waferEdge);

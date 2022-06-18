@@ -6,3 +6,4 @@ cp -p ../jfreechart-1.0.19/source/org/jfree/data/statistics/HistogramDataset.jav
 cp -p ../jfreechart-1.0.19/source/org/jfree/data/general/WaferMapDataset.java WaferMapDataset.java
 cp -p ../jfreechart-1.0.19/source/org/jfree/chart/plot/WaferMapPlot.java WaferMapPlot.java
 cp -p ../jfreechart-1.0.19/source/org/jfree/chart/renderer/WaferMapRenderer.java WaferMapRenderer.java
+cp -p ../jfreechart-1.0.19/source/org/jfree/chart/labels/AbstractCategoryItemLabelGenerator.java AbstractCategoryItemLabelGenerator.java

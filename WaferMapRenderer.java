@@ -35,6 +35,7 @@ public class WaferMapRenderer extends AbstractRenderer
     private int paintIndexMethod;
     private boolean printChipValue;
     private boolean showSurroundingGrid;
+    private boolean showWaferCircle = true;
     private LookupPaintScale paintScale;
     
     public WaferMapRenderer() {
@@ -151,9 +152,9 @@ public class WaferMapRenderer extends AbstractRenderer
     private void makeBlueOrangeIndex(final Set uniqueValues, final WaferMapDataset data) {
         Number min = data.getAllGroupsMinValue();
         Number max = data.getAllGroupsMaxValue();
-        final int size = uniqueValues.size();
+        //final int size = uniqueValues.size();
         int i = 0;
-        final Set<Number> uniqueNumbers = (Set<Number>)uniqueValues;
+       // final Set<Number> uniqueNumbers = (Set<Number>)uniqueValues;
         final float[] blueVals = new float[3];
         Color.RGBtoHSB(Color.BLUE.getRed(), Color.BLUE.getGreen(), Color.BLUE.getBlue(), blueVals);
         final float[] c2Vals = new float[3];
@@ -183,15 +184,20 @@ public class WaferMapRenderer extends AbstractRenderer
         final double interval = (max.doubleValue() - min.doubleValue()) / 1000.0;
         Color.RGBtoHSB(c2.getRed(), c2.getGreen(), c2.getBlue(), c2Vals);
         this.paintScale = new LookupPaintScale(min.doubleValue(), max.doubleValue(), (Paint)Color.RED);
-        for (double value = min.doubleValue(); value <= max.doubleValue(); value = max.doubleValue()) {
+        //for (double value = min.doubleValue(); value <= max.doubleValue(); value = max.doubleValue()) {
+        double value = min.doubleValue();
+        while (value <= max.doubleValue()) {
             final float hue = blueVals[0] + (c2Vals[0] - blueVals[0]) * (i + 1) / 1000.0f;
             final Color c3 = Color.getHSBColor(hue, 1.0f, 1.0f);
             this.paintScale.add(value, (Paint)c3);
             ++i;
             final double lastValue = value;
             value += interval;
-            if (value > max.doubleValue() && lastValue < max.doubleValue()) {}
+            //System.out.println("value "+value +" interval "+interval);
+            if (value > max.doubleValue() && lastValue < max.doubleValue()) 
+            	value = max.doubleValue();
         }
+      //  System.out.println("Finish makeBlueOrange");
     }
     
     public PaintScale getPaintScale() {
@@ -254,6 +260,7 @@ public class WaferMapRenderer extends AbstractRenderer
         }
     }
     
+    private int legendEntriesDivisor = 20;
     private LegendItemCollection makePaintScaleLegendCollection() {
         final LegendItemCollection result = new LegendItemCollection();
         if (this.paintScale == null) {
@@ -267,7 +274,7 @@ public class WaferMapRenderer extends AbstractRenderer
 		for (Number n : uniqueValues){
 			uniqueValueList.add(n.doubleValue());
 		}
-        final double interval = (this.paintScale.getUpperBound() - this.paintScale.getLowerBound()) / 20.0;
+        final double interval = (this.paintScale.getUpperBound() - this.paintScale.getLowerBound()) / legendEntriesDivisor;
         double value = this.paintScale.getLowerBound();
         final DecimalFormat df = new DecimalFormat("0.#####E0");
         while (value <= this.paintScale.getUpperBound()) {
@@ -366,4 +373,14 @@ public class WaferMapRenderer extends AbstractRenderer
     public void setShowSurroundingGrid(final boolean showSurroundingGrid) {
         this.showSurroundingGrid = showSurroundingGrid;
     }
+
+	public boolean isShowWaferCircle() {
+		return showWaferCircle;
+	}
+
+	public void setShowWaferCircle(boolean showWaferCircle) {
+		this.showWaferCircle = showWaferCircle;
+	}
+    
+    
 }

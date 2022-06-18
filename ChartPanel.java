@@ -2273,7 +2273,8 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 				double valueRange = upper - lower;
 				upper = upper + .05 * valueRange;
                 lower = lower - .05 * valueRange;
-				numericAxis.setRange(new Range(lower, upper), true, true);
+                if (lower < upper)
+                	numericAxis.setRange(new Range(lower, upper), true, true);
 			}
 		}
     }
